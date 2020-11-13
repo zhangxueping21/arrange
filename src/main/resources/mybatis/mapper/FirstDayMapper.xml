@@ -2,6 +2,8 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.arrange.dao.mapper.UnitMapper">
-
+<mapper namespace="com.arrange.dao.mapper.FirstDayMapper">
+    <update  id="settle" >
+        alter table firstday auto_increment=1;
+    </update >
 </mapper>

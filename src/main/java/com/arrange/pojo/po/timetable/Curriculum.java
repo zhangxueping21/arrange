@@ -15,11 +15,6 @@ public class Curriculum {
     public static final Integer NORMAL = 0;
     public static final Integer ODD_WEEK = 1;//单周
     public static final Integer DOUBLE_WEEK  = 2;//双周
-    private String name;
-
-    private String teacher;
-
-    private String place;
 
     private Integer from_week;
 

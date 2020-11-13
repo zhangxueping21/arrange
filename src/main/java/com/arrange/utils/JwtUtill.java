@@ -28,23 +28,37 @@ public class JwtUtill {
     /**签名私钥 */
     private String key;
     /**签名的失效时间 */
-    //private Long ttl;
+    private Long ttl;
 
     /**
      * 创建token
-     * @param uid 用户名，对应SsfwAccount中的uid
+     * @param stuNumber 用户名，对应user中的stuNumber
      * @return 返回生成的token字符串
      */
-    public String createJwt(String uid){
+    public String createJwt(String stuNumber){
         //设置失效时间，未使用，待确认
-        //long now = System.currentTimeMillis();//当前时间戳
-        //long exp = now + this.ttl;//失效时的时间戳
+        long now = System.currentTimeMillis();//当前时间戳
+        long exp = now + this.ttl;//失效时的时间戳
         //创建jwtBuilder
         JwtBuilder jwtBuilder =
                 Jwts.builder()
-                .setId(uid)
+                .setId(stuNumber)
                 .setIssuedAt(new Date())
-                //.setExpiration(new Date(exp))
+                .setExpiration(new Date(exp))
+                .signWith(SignatureAlgorithm.HS256,key);
+        //返回token
+        return jwtBuilder.compact();
+    }
+    public String updateJwt(String stuNumber){
+        //设置失效时间，未使用，待确认
+        long now = System.currentTimeMillis();//当前时间戳
+        long exp = now + this.ttl;//失效时的时间戳
+        //创建jwtBuilder
+        JwtBuilder jwtBuilder =
+                Jwts.builder()
+                .setId(stuNumber)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(exp))
                 .signWith(SignatureAlgorithm.HS256,key);
         //返回token
         return jwtBuilder.compact();

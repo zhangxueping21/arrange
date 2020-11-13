@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 @Mapper
 @Repository
 public interface ActiveMapper extends BaseMapper<Active> {
+    void settle();
+    int getMaxId();
 }

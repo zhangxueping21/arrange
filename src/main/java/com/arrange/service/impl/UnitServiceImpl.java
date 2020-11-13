@@ -11,4 +11,9 @@ import org.springframework.stereotype.Service;
 public class UnitServiceImpl extends ServiceImpl<UnitMapper, Unit> implements UnitService {
     @Autowired
     private UnitMapper unitMapper;
+
+    @Override
+    public void settle() {
+        unitMapper.settle();
+    }
 }

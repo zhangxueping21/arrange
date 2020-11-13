@@ -11,4 +11,9 @@ import org.springframework.stereotype.Service;
 public class FirstDayServiceImpl extends ServiceImpl<FirstDayMapper, FirstDay> implements FirstDayService {
     @Autowired
     private FirstDayMapper firstDayMapper;
+
+    @Override
+    public void settle() {
+        firstDayMapper.settle();
+    }
 }

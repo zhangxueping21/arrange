@@ -11,4 +11,9 @@ import org.springframework.stereotype.Service;
 public class InvitationServiceImpl extends ServiceImpl<InvitationMapper, Invitation> implements InvitationService {
     @Autowired
     private InvitationMapper invitationMapper;
+
+    @Override
+    public void settle() {
+        invitationMapper.settle();
+    }
 }

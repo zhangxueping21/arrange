@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 @Mapper
 @Repository
 public interface UnitMapper extends BaseMapper<Unit> {
+    void settle();
 }

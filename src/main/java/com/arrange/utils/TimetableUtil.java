@@ -31,7 +31,8 @@ public class TimetableUtil {
      * @param page
      * @return
      */
-    public static String dataProcessing (String page) throws JsonProcessingException {
+    public static Map<String,String> dataProcessing (String page) throws JsonProcessingException {
+        String username = "";
         Curriculums curriculums = new Curriculums();
         List<List<Curriculum>> curriculumWeek = new ArrayList<>(7);//每个周的课，一周有7天
         for(int i = 0;i<7;i++)
@@ -40,8 +41,9 @@ public class TimetableUtil {
         if(page != null && !"".equals(page)){
             Document document = Jsoup.parse(page);
             Elements inputArray = document.getElementsByTag("tr");//对应的元素数组
+            String[] str = document.getElementsByTag("strong").text().split("【");
+            username = str[0];
             String endString = "课程类别";
-            System.out.println(inputArray.size());
             try{
                 for (int i=1;! inputArray.get(i).text().contains(endString);i++){
                     Element elementTr = inputArray.get(i);
@@ -60,14 +62,13 @@ public class TimetableUtil {
         curriculums.setCurriculum(curriculumWeek);
         ObjectMapper mapper = new ObjectMapper();
         String curriculumsJson = mapper.writeValueAsString(curriculums);
-        return curriculumsJson;
+        Map<String,String> map = new HashMap<>();
+        map.put("curriculumsJson",curriculumsJson);
+        map.put("username",username);
+        return map;
     }
 
     private static void setCurriculum(Elements elementTds,List<List<Curriculum>> curriculumWeek ){
-        String name = elementTds.get(2).text();
-        String teacher = elementTds.get(7).text();
-        String[] places = elementTds.get(6).text().split(" ");
-        String place = null;
         Integer from_week = null;
         Integer to_week = null;
         Integer from_section = null;
@@ -101,14 +102,13 @@ public class TimetableUtil {
                     case '天' :week = 7;break;
                 }
             }else if(msg.contains("节")){
-                place = places[2*rows]+" "+places[2*rows+1];
                 rows ++;
                 from_section = Integer.parseInt(msg.substring(0,msg.indexOf("-")));
                 to_section = Integer.parseInt(msg.substring(msg.indexOf("-")+1,msg.indexOf("节")));
-                Curriculum curriculum = new Curriculum(name,teacher,place,from_week,to_week,from_section,to_section,arrange_type);
+                Curriculum curriculum = new Curriculum(from_week,to_week,from_section,to_section,arrange_type);
                 curriculumWeek.get(week-1).add(curriculum);
             }else{
-                Curriculum curriculum = new Curriculum(name,teacher,place,from_week,to_week,from_section,to_section,arrange_type);
+                Curriculum curriculum = new Curriculum(from_week,to_week,from_section,to_section,arrange_type);
             }
         }
     }
@@ -120,10 +120,7 @@ class SortByAge implements Comparator<Curriculum> {
     public int compare(Curriculum o1, Curriculum o2) {
         int i = o1.getFrom_section().compareTo(o2.getFrom_section());
         if(i == 0) {
-            int j = o1.getTo_section().compareTo(o2.getTo_section());
-            if(j == 0) {
-                return o1.getName().compareTo(o2.getName());
-            }else return j;
+            return o1.getTo_section().compareTo(o2.getTo_section());
         }else return i;
     }
 }

@@ -1,5 +1,6 @@
 package com.arrange.utils;
 
+import com.arrange.pojo.po.LoginUser;
 import com.arrange.pojo.po.User;
 import com.arrange.pojo.vo.ThreadLocalClient;
 import com.arrange.pojo.vo.ThreadLocalContext;
@@ -60,13 +61,13 @@ public class HttpUtil {
      * 到教务系统爬取数据
      * @return
      */
-    public static String crawl(User user, String page) throws IOException {
+    public static String crawl(LoginUser loginUser, String page) throws IOException {
 
         CookieManager cookieManager = new CookieManager();
         cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
         RequestConfig config = RequestConfig.custom().setRedirectsEnabled(true).build();//不允许重定向
 
-        if(LoginUtil.verify(user.getStuNumber(),user.getPassword())){
+        if(LoginUtil.verify(loginUser.getStuNumber(),loginUser.getPassword())){
 
             HttpGet httpGet = new HttpGet("http://ssfw.scuec.edu.cn/ssfw/cas_index.jsp");
             httpGet.setConfig(config);

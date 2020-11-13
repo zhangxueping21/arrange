@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 @Mapper
 @Repository
 public interface InvitationMapper extends BaseMapper<Invitation> {
+    void settle();
 }

@@ -21,7 +21,7 @@ public class PasswordUtil {
 
     private PasswordUtil(){}
     /**
-     * 密码预处理
+     * 加密
      * @param password 用户输入的密码
      * @return 初始密文，有待进一步加工
      */

@@ -11,4 +11,14 @@ import org.springframework.stereotype.Service;
 public class ActiveServiceImpl extends ServiceImpl<ActiveMapper, Active> implements ActiveService {
     @Autowired
     private ActiveMapper activeMapper;
+
+    @Override
+    public void settle() {
+        activeMapper.settle();
+    }
+
+    @Override
+    public int getMaxId() {
+        return activeMapper.getMaxId();
+    }
 }
