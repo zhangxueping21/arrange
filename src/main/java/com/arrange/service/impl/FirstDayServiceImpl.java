@@ -16,4 +16,9 @@ public class FirstDayServiceImpl extends ServiceImpl<FirstDayMapper, FirstDay> i
     public void settle() {
         firstDayMapper.settle();
     }
+
+    @Override
+    public int getMaxId() {
+        return firstDayMapper.getMaxId();
+    }
 }

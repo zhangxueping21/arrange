@@ -6,4 +6,8 @@
     <update  id="settle" >
         alter table firstday auto_increment=1;
     </update >
+
+    <select id="getMaxId" resultType="int">
+        select MAX(id) from first_day;
+    </select>
 </mapper>

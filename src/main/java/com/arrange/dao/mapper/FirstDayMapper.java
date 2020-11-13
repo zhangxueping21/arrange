@@ -9,4 +9,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface FirstDayMapper extends BaseMapper<FirstDay> {
     void settle();
+    int getMaxId();
 }

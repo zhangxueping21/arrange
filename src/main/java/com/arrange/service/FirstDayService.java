@@ -8,4 +8,6 @@ import org.springframework.stereotype.Service;
 @Service
 public interface FirstDayService extends IService<FirstDay> {
     void settle();
+
+    int getMaxId();
 }
