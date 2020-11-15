@@ -8,6 +8,8 @@ class ArrangeApplicationTests {
 
     @Test
     void contextLoads() {
+        String string = "1234";
+        System.out.println(string.getBytes());
     }
 
 }

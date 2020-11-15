@@ -1,9 +1,10 @@
 package com.arrange.controller;
 
-import com.arrange.pojo.vo.Response;
+import com.arrange.service.ActiveService;
 import com.arrange.service.InvitationService;
+import com.arrange.service.UserService;
+import com.arrange.utils.JwtUtill;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -13,10 +14,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class InvitationController {
     @Autowired
     private InvitationService invitationService;
+    @Autowired
+    private JwtUtill jwtUtill;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private ActiveService activeService;
 
-    @PutMapping("/settleInvitation")
-    public Response settle(){
-        invitationService.settle();
-        return new Response().success();
-    }
+    //获取被邀请的新信息
+
+    //响应邀请，接受或拒绝
 }

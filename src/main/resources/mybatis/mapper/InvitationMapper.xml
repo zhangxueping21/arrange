@@ -6,4 +6,10 @@
     <update  id="settle" >
         alter table invitation auto_increment=1;
     </update >
+    <select id="getUsers" resultType="user" parameterType="int">
+        select * from user where id = (select user_id from invitation where active_id = #{activeId} and state = 11);
+    </select>
+    <select id="getByActiveIdAndUserId" resultType="invitation">
+        select * from invitation where active_id = #{activeId} and user_id = #{userId} order by update_time desc;
+    </select>
 </mapper>

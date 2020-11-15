@@ -10,8 +10,11 @@ import com.arrange.utils.HttpUtil;
 import com.arrange.utils.JwtUtill;
 import com.arrange.utils.TimetableUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -22,7 +25,7 @@ import java.util.Map;
  * 登录教务系统的controller
  */
 @RestController
-public class LoginController {
+public class UserController {
     @Autowired
     private UserService userService;
     @Autowired
@@ -57,5 +60,23 @@ public class LoginController {
             return new Response().success(resultMap);
         }
         return new Response(ResponseMsg.PASSWORD_WRONG);
+    }
+
+    @GetMapping("/getUserMsg")
+    public Response getUserMsg(HttpServletRequest request){
+        String stuNumber = (String) request.getAttribute("stuNumber");
+        if(!StringUtils.isEmpty(stuNumber)){
+            List<User> users = userService.getByStuNumber(stuNumber);
+            if(users != null && users.size()>0) {
+                User user = users.get(0);
+                String token = jwtUtill.updateJwt(stuNumber);
+                Map<String,Object> resultMap = new HashMap<>();
+                resultMap.put("user",user);
+                resultMap.put("token",token);
+                return new Response().success(resultMap);
+            }
+            return new Response(ResponseMsg.NO_TARGET);
+        }
+        return new Response(ResponseMsg.AUTHENTICATE_FAILED);
     }
 }

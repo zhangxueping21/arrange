@@ -10,4 +10,7 @@
     <select id="getMaxId" resultType="int">
         select MAX(id) from active;
     </select>
+    <select id="listByUserId" resultType="active" parameterType="int">
+        select *from active where create_user = #{userId};
+    </select>
 </mapper>

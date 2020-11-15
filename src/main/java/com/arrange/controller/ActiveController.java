@@ -33,8 +33,8 @@ public class ActiveController {
     @Autowired
     private InvitationService invitationService;
 
-    @PostMapping("/createActive")
-    public Response createActive(HttpServletRequest request, CreateActive createActive){
+    @PostMapping("/publishActive")
+    public Response publishActive(HttpServletRequest request, CreateActive createActive){
         String stuNumber = (String) request.getAttribute("stuNumber");
         if(!StringUtils.isEmpty(stuNumber)){
             List<User> users = userService.getByStuNumber(stuNumber);
@@ -45,7 +45,7 @@ public class ActiveController {
                         ,createActive.getName(),createActive.getUnit()
                         ,startTime,endTime
                         ,createActive.getNum(),createActive.getPosition()
-                        ,"",createActive.getRemarks()
+                        ,createActive.getRemarks(),0,""
                         ,LocalDateTime.now(), LocalDateTime.now());
                 String token = jwtUtill.updateJwt(stuNumber);
                 activeService.saveOrUpdate(active);
@@ -53,6 +53,7 @@ public class ActiveController {
                 sendInvitation(active);
                 return new Response().success(token);
             }
+            return new Response(ResponseMsg.NO_TARGET);
         }
         return new Response(ResponseMsg.AUTHENTICATE_FAILED);
     }
@@ -67,25 +68,76 @@ public class ActiveController {
                 invitationService.saveOrUpdate(invitation);
                 names[i] = users.get(i).getName();
             }
-            Result result = new Result();
-            result.setUnCheck(names);
-            active.setResult(result.toString());
-            activeService.saveOrUpdate(active);
         }
     }
-
-    @GetMapping("/getActive")
-    public Response getActive(HttpServletRequest request,Integer id){
+    /**
+     * 获取用户发布的，已排班的活动
+     * @param request
+     * @return
+     */
+    @GetMapping("/getPublishedActives1")
+    public Response getPublishedActives1(HttpServletRequest request){
         String stuNumber = (String) request.getAttribute("stuNumber");
-        if(!StringUtils.isEmpty(stuNumber)){
-            Active active = activeService.getById(id);
-            if(active != null){
-                String token = jwtUtill.createJwt(stuNumber);
-                Map<String,Object> map = new HashMap<>();
-                map.put("token",token);
-                map.put("active",active);
-                return new Response().success(map);
+        Map<String,Object> resultMap = new HashMap<>();
+        if(!StringUtils.isEmpty(stuNumber)) {
+            List<User> users = userService.getByStuNumber(stuNumber);
+            if(users != null && users.size()>0) {
+                Integer userId = users.get(0).getId();
+                List<Active> actives = activeService.listByUserId(userId);
+                resultMap.put("actives",actives);
+                String token = jwtUtill.updateJwt(stuNumber);
+                resultMap.put("token",token);
+                return new Response().success(resultMap);
             }
+            return new Response(ResponseMsg.NO_TARGET);
+        }
+        return new Response(ResponseMsg.AUTHENTICATE_FAILED);
+    }
+
+    /**
+     * 获取用户发布的，未排班的活动
+     * @param request
+     * @return
+     */
+    @GetMapping("/getPublishedActives0")
+    public Response getPublishedActives0(HttpServletRequest request){
+        String stuNumber = (String) request.getAttribute("stuNumber");
+        Map<String,Object> resultMap = new HashMap<>();
+        if(!StringUtils.isEmpty(stuNumber)) {
+            List<User> users = userService.getByStuNumber(stuNumber);
+            if(users != null && users.size()>0) {
+                Integer userId = users.get(0).getId();
+
+
+                String token = jwtUtill.updateJwt(stuNumber);
+                resultMap.put("token",token);
+                return new Response().success(resultMap);
+            }
+            return new Response(ResponseMsg.NO_TARGET);
+        }
+        return new Response(ResponseMsg.AUTHENTICATE_FAILED);
+    }
+
+    /**
+     * 获取用户参加的活动
+     * @param request
+     * @return
+     */
+    @GetMapping("/getJoinActive")
+    public Response getJoinActive(HttpServletRequest request){
+        String stuNumber = (String) request.getAttribute("stuNumber");
+        Map<String,Object> resultMap = new HashMap<>();
+        if(!StringUtils.isEmpty(stuNumber)){
+            List<User> users = userService.getByStuNumber(stuNumber);
+            if(users != null && users.size()>0) {
+                Integer userId = users.get(0).getId();
+
+
+                String token = jwtUtill.updateJwt(stuNumber);
+                resultMap.put("token",token);
+                return new Response().success(resultMap);
+            }
+            return new Response(ResponseMsg.NO_TARGET);
         }
         return new Response(ResponseMsg.AUTHENTICATE_FAILED);
     }
@@ -95,16 +147,10 @@ public class ActiveController {
         String stuNumber = (String) request.getAttribute("stuNumber");
         if(!StringUtils.isEmpty(stuNumber)){
             activeService.removeById(id);
-            settle();
             String token = jwtUtill.createJwt(stuNumber);
             return new Response().success(token);
         }
         return new Response(ResponseMsg.AUTHENTICATE_FAILED);
     }
 
-    @PostMapping("/settleActive")
-    public Response settle(){
-        activeService.settle();
-        return new Response().success();
-    }
 }

@@ -27,10 +27,12 @@ public class Active {
     private Integer num;
     /**活动地点*/
     private String position;
-    /**排班结果*/
-    private String result;
     /**活动备注*/
     private String remarks;
+    /**活动的状态，已排班为1，未排班为0*/
+    private Integer state;
+    /**排班结果*/
+    private String result;
     /**创建时间*/
     private LocalDateTime createTime;
     /**更新时间*/

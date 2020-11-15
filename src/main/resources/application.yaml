@@ -86,8 +86,4 @@ interceptorconfig:
     - /swagger-ui.html
     - /webjars/**
     - /swagger-resources/**
-    - /settleUnit
     - /login
-    - /settleActive
-    - /settleFirstDay
-    - /settleInvitation
