@@ -11,6 +11,7 @@ import com.arrange.utils.JwtUtill;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -25,6 +26,7 @@ import java.util.Map;
 /**
  * 活动的controller
  */
+@Transactional
 @RestController
 public class ActiveController {
     @Autowired

@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.annotation.PostConstruct;
 import java.util.TimeZone;
@@ -13,6 +14,7 @@ import java.util.TimeZone;
 @SpringBootApplication
 @ServletComponentScan
 @EnableScheduling
+@EnableTransactionManagement
 @EnableCaching//通过@EnableCaching注解自动化配置合适的缓存管理器（CacheManager）
 @MapperScan("com.arrange.dao.mapper")
 public class ArrangeApplication {
