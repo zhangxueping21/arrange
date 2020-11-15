@@ -8,6 +8,8 @@ import com.arrange.pojo.vo.ResponseMsg;
 import com.arrange.service.UnitService;
 import com.arrange.service.UserService;
 import com.arrange.utils.JwtUtill;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -31,7 +33,7 @@ public class UnitController {
     @Autowired
     private JwtUtill jwtUtill;
     @GetMapping("/getUnit")
-    public Response getUnit(HttpServletRequest request){
+    public Response getUnit(HttpServletRequest request) throws JsonProcessingException {
         String stuNumber = (String) request.getAttribute("stuNumber");
         Map<String,Object> resultMap = new HashMap<>();
         if(!StringUtils.isEmpty(stuNumber)) {
@@ -47,7 +49,9 @@ public class UnitController {
             String token = jwtUtill.updateJwt(stuNumber);
             resultMap.put("units",unitList);
             resultMap.put("token",token);
-            return new Response().success(resultMap);
+            ObjectMapper mapper = new ObjectMapper();
+            String responseJson = mapper.writeValueAsString(resultMap);
+            return new Response().success(responseJson);
         }
         return new Response(ResponseMsg.NO_TARGET);
     }

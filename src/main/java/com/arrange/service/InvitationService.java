@@ -14,4 +14,10 @@ public interface InvitationService extends IService<Invitation> {
     List<User> getUsers(int activeId);
 
     Invitation getByActiveIdAndUserId(Integer activeId, Integer userId);
+
+    List<Invitation> listByUserId(Integer userId);
+
+    void removeByActiveId(Integer activeId);
+
+    List<Invitation> getByActiveId(Integer activeId);
 }

@@ -9,11 +9,12 @@ import com.arrange.service.UserService;
 import com.arrange.utils.HttpUtil;
 import com.arrange.utils.JwtUtill;
 import com.arrange.utils.TimetableUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -57,13 +58,15 @@ public class UserController {
             userService.saveOrUpdate(user);
             String token = jwtUtill.createJwt(loginUser.getStuNumber());
             resultMap.put("token",token);
-            return new Response().success(resultMap);
+            ObjectMapper mapper = new ObjectMapper();
+            String responseJson = mapper.writeValueAsString(resultMap);
+            return new Response().success(responseJson);
         }
         return new Response(ResponseMsg.PASSWORD_WRONG);
     }
 
     @GetMapping("/getUserMsg")
-    public Response getUserMsg(HttpServletRequest request){
+    public Response getUserMsg(HttpServletRequest request) throws JsonProcessingException {
         String stuNumber = (String) request.getAttribute("stuNumber");
         if(!StringUtils.isEmpty(stuNumber)){
             List<User> users = userService.getByStuNumber(stuNumber);
@@ -73,7 +76,9 @@ public class UserController {
                 Map<String,Object> resultMap = new HashMap<>();
                 resultMap.put("user",user);
                 resultMap.put("token",token);
-                return new Response().success(resultMap);
+                ObjectMapper mapper = new ObjectMapper();
+                String responseJson = mapper.writeValueAsString(resultMap);
+                return new Response().success(responseJson);
             }
             return new Response(ResponseMsg.NO_TARGET);
         }

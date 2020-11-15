@@ -12,4 +12,13 @@
     <select id="getByActiveIdAndUserId" resultType="invitation">
         select * from invitation where active_id = #{activeId} and user_id = #{userId} order by update_time desc;
     </select>
+    <select id="listByUserId" parameterType="int" resultType="invitation">
+        select * from invitation where user_id = #{userId} order by update_time desc;
+    </select>
+    <delete id="removeByActiveId" parameterType="int" >
+        delete from invitation where active_id = #{activeId};
+    </delete>
+    <select id="getByActiveId" parameterType="int" resultType="invitation">
+        select * from invitation where active_id = #{activeId};
+    </select>
 </mapper>

@@ -33,4 +33,19 @@ public class InvitationServiceImpl extends ServiceImpl<InvitationMapper, Invitat
             return invitations.get(0);
         return null;
     }
+
+    @Override
+    public List<Invitation> listByUserId(Integer userId) {
+        return invitationMapper.listByUserId(userId);
+    }
+
+    @Override
+    public void removeByActiveId(Integer activeId) {
+        invitationMapper.removeByActiveId(activeId);
+    }
+
+    @Override
+    public List<Invitation> getByActiveId(Integer activeId) {
+        return invitationMapper.getByActiveId(activeId);
+    }
 }

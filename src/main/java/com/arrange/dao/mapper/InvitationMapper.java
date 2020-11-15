@@ -14,4 +14,7 @@ public interface InvitationMapper extends BaseMapper<Invitation> {
     void settle();
     List<User> getUsers(int activeId);
     List<Invitation> getByActiveIdAndUserId(Integer activeId, Integer userId);
+    List<Invitation> listByUserId(Integer userId);
+    void removeByActiveId(Integer activeId);
+    List<Invitation> getByActiveId(Integer activeId);
 }

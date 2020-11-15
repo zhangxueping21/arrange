@@ -102,12 +102,13 @@ public class ArrangeController {
                         }
                     }
                 }
-                String arrangeResult = dealGroups(groups,active);
+                List<String> resultList= dealGroups(groups,active);
                 String token = jwtUtill.updateJwt(stuNumber);
                 resultMap.put("token",token);
-                resultMap.put("arrangeResult",arrangeResult);
-
-                return new Response().success(resultMap);
+                resultMap.put("resultList",resultList);
+                ObjectMapper mapper = new ObjectMapper();
+                String responseJson = mapper.writeValueAsString(resultMap);
+                return new Response().success(responseJson);
             }
             return new Response(ResponseMsg.NO_TARGET);
         }
@@ -119,7 +120,7 @@ public class ArrangeController {
      * @param groups
      * @return
      */
-    private String dealGroups(int[][][] groups,Active active) throws JsonProcessingException {
+    private List<String> dealGroups(int[][][] groups,Active active) throws JsonProcessingException {
         LocalDate formDay = active.getStartTime();
         List<String> resultList = new ArrayList<>();
         for(int i = 0;i<groups.length;i++) {//第几天
@@ -141,7 +142,8 @@ public class ArrangeController {
         String resultListJson = mapper.writeValueAsString(resultList);
         active.setState(1);
         active.setResult(resultListJson);
-        return resultListJson;
+        activeService.saveOrUpdate(active);
+        return  resultList;
     }
 
     /**

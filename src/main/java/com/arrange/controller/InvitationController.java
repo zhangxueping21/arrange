@@ -1,11 +1,26 @@
 package com.arrange.controller;
 
+import com.alibaba.druid.util.StringUtils;
+import com.arrange.pojo.po.Active;
+import com.arrange.pojo.po.Invitation;
+import com.arrange.pojo.po.User;
+import com.arrange.pojo.vo.Response;
+import com.arrange.pojo.vo.ResponseMsg;
 import com.arrange.service.ActiveService;
 import com.arrange.service.InvitationService;
 import com.arrange.service.UserService;
 import com.arrange.utils.JwtUtill;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 邀请信息的controller
@@ -21,7 +36,61 @@ public class InvitationController {
     @Autowired
     private ActiveService activeService;
 
-    //获取被邀请的新信息
 
-    //响应邀请，接受或拒绝
+    /**
+     * 获取被邀请的活动的信息，弹窗显示时用
+     * @param request
+     * @return
+     */
+    @GetMapping("/getInvitedMsg")
+    public Response getInvitedMsg(HttpServletRequest request) throws JsonProcessingException {
+        String stuNumber = (String) request.getAttribute("stuNumber");
+        Map<String,Object> resultMap = new HashMap<>();
+        List<User> users = userService.getByStuNumber(stuNumber);
+        List<Active> actives0 = new ArrayList<>();
+        if(!StringUtils.isEmpty(stuNumber)){
+            if(users != null && users.size()>0) {
+                List<Invitation> invitations = invitationService.listByUserId(users.get(0).getId());
+                for(Invitation invitation:invitations){
+                    if(invitation.getState() == 0){
+                        actives0.add(activeService.getById(invitation.getActiveId()));
+                        invitation.setState(1);
+                        invitationService.saveOrUpdate(invitation);
+                    }
+                }
+                String token = jwtUtill.updateJwt(stuNumber);
+                resultMap.put("token",token);
+                resultMap.put("actives0",actives0);
+                ObjectMapper mapper = new ObjectMapper();
+                String responseJson = mapper.writeValueAsString(resultMap);
+                return new Response().success(responseJson);
+            }
+            return new Response(ResponseMsg.NO_TARGET);
+        }
+            return new Response(ResponseMsg.AUTHENTICATE_FAILED);
+    }
+
+    /**
+     * 响应邀请，接受或拒绝
+     * @param request
+     * @param state
+     * @param activeId
+     * @return
+     */
+    @PostMapping("/responseInvitation")
+    public Response responseInvitation(HttpServletRequest request,int state,int activeId){
+        String stuNumber = (String) request.getAttribute("stuNumber");
+        Map<String,Object> resultMap = new HashMap<>();
+        List<User> users = userService.getByStuNumber(stuNumber);
+        if(!StringUtils.isEmpty(stuNumber)){
+            if(users != null && users.size()>0) {
+                Invitation invitation = invitationService.getByActiveIdAndUserId(activeId,users.get(0).getId());
+                invitation.setState(state);
+                String token = jwtUtill.updateJwt(stuNumber);
+                return new Response().success(token);
+            }
+            return new Response(ResponseMsg.NO_TARGET);
+        }
+        return new Response(ResponseMsg.AUTHENTICATE_FAILED);
+    }
 }
