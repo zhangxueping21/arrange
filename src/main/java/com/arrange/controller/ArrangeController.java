@@ -86,7 +86,7 @@ public class ArrangeController {
                                                 freeMsg1 = new FreeMsg(id,free1);
                                             }
                                         }
-                                        if(freeMsg1 != null){
+                                        if(freeMsg1 != null && !search(groups[i][j],freeMsg1.getId())){
                                             groups[i][j][n] = freeMsg1.getId();
                                             hasArrange.put(freeMsg1.getId(),1);
                                             frees.remove(freeMsg1);
@@ -96,7 +96,7 @@ public class ArrangeController {
                                 }
                             }
                         }
-                        if(max > 1)
+                        if(max > 4*days*num)
                             break;
                     }
                 }else if(num == 0){
@@ -122,6 +122,20 @@ public class ArrangeController {
             }
         }
         return new Response(ResponseMsg.AUTHENTICATE_FAILED);
+    }
+
+    /**
+     * 查看这个用户在该时间段有没有被安排值班
+     * @param users
+     * @param userId
+     * @return
+     */
+    private boolean search(int[] users, Integer userId) {
+        for(int i = 0;i<users.length;i++){
+            if(users[i] == userId)
+                return true;
+        }
+        return false;
     }
 
     /**

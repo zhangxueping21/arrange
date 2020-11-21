@@ -8,10 +8,10 @@ spring:
     cache: false
   datasource:
     username: root
-    password: 213926
-#   password: SZZpTH(dcD*zzi]bkVqtqdi2
-    url: jdbc:mysql://localhost:3306/arrange?allowPublicKeyRetrieval=true&useSSL=false&useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
-#    url: jdbc:mysql://mysql:3306/arrange?allowPublicKeyRetrieval=true&useSSL=false&useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
+#    password: 213926
+    password: SZZpTH(dcD*zzi]bkVqtqdi2
+#    url: jdbc:mysql://localhost:3306/arrange?allowPublicKeyRetrieval=true&useSSL=false&useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
+    url: jdbc:mysql://mysql:3306/arrange?allowPublicKeyRetrieval=true&useSSL=false&useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
     #Spring Boot 默认是不注入这些属性值的，需要自己绑定
@@ -76,8 +76,7 @@ server:
 # jwt的私钥和失效时间1h
 jwtutill:
   key: bitwechat
-  ttl: 36000000000000
-
+  ttl: 3600000
 passwordutil:
   encryptablesalt: SGxw#hkYlfc$#p^PZ*v$u26s
   key: HVFe8r%4NIx#Ny*0u!rJmw&kuE!iF4#*nh4E0dp2rj
