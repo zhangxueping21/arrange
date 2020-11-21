@@ -8,12 +8,9 @@ import com.arrange.service.ActiveService;
 import com.arrange.service.InvitationService;
 import com.arrange.service.UserService;
 import com.arrange.utils.JwtUtill;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -58,7 +55,6 @@ public class ActiveController {
                 sendInvitation(active);
                 return new Response().success(token);
             }
-            return new Response(ResponseMsg.NO_TARGET);
         }
         return new Response(ResponseMsg.AUTHENTICATE_FAILED);
     }
@@ -66,6 +62,7 @@ public class ActiveController {
     private void sendInvitation(Active active){
         int id = activeService.getMaxId();
         List<User> users = userService.getByUnit(Integer.toString(active.getUnit()));
+        users = filtration(users,active.getUnit());
         if(users != null && users.size()>0){
             String[] names = new String[users.size()];
             for (int i = 0;i<users.size();i++) {
@@ -75,33 +72,52 @@ public class ActiveController {
             }
         }
     }
+    private List<User> filtration(List<User> users,int unit){
+        List<User> users1 = new ArrayList<>();
+        for(User user:users){
+            String[] units = user.getUnit().split(" ");
+            for(int i = 0;i<units.length;i++){
+                if(Integer.parseInt(units[i])==unit){
+                    users1.add(user);
+                    break;
+                }
+            }
+        }
+        return users1;
+    }
+
     /**
      * 获取用户发布的，已排班的活动
      * @param request
      * @return
      */
     @GetMapping("/getPublishedActives1")
-    public Response getPublishedActives1(HttpServletRequest request) throws JsonProcessingException {
+    public Response getPublishedActives1(HttpServletRequest request)  {
         String stuNumber = (String) request.getAttribute("stuNumber");
         Map<String,Object> resultMap = new HashMap<>();
+
         if(!StringUtils.isEmpty(stuNumber)) {
             List<User> users = userService.getByStuNumber(stuNumber);
             if(users != null && users.size()>0) {
                 Integer userId = users.get(0).getId();
                 List<Active> actives = activeService.listByUserId(userId);
-                List<Active> actives1 = new ArrayList<>();
+                List<ActiveMsg> activesMsg = new ArrayList<>();
                 for(Active active:actives){
-                    if(active.getState() == 1)
-                        actives1.add(active);
+                    if(active.getState() == 1){
+                        String startTime = active.getStartTime().format( DateTimeFormatter.ofPattern("yyyy-M-d"));
+                        String endTime = active.getEndTime().format( DateTimeFormatter.ofPattern("yyyy-M-d"));
+                        ActiveMsg activeMsg = new ActiveMsg(active.getId()
+                                ,active.getCreateUser(),active.getName(),active.getUnit()
+                                ,startTime,endTime,active.getNum(),active.getPosition()
+                                ,active.getRemarks(),active.getState(),active.getResult());
+                        activesMsg.add(activeMsg);
+                    }
                 }
-                resultMap.put("actives1",actives1);
+                resultMap.put("actives1",activesMsg);
                 String token = jwtUtill.updateJwt(stuNumber);
                 resultMap.put("token",token);
-                ObjectMapper mapper = new ObjectMapper();
-                String responseJson = mapper.writeValueAsString(resultMap);
-                return new Response().success(responseJson);
+                return new Response().success(resultMap);
             }
-            return new Response(ResponseMsg.NO_TARGET);
         }
         return new Response(ResponseMsg.AUTHENTICATE_FAILED);
     }
@@ -112,7 +128,7 @@ public class ActiveController {
      * @return
      */
     @GetMapping("/getPublishedActives0")
-    public Response getPublishedActives0(HttpServletRequest request) throws JsonProcessingException {
+    public Response getPublishedActives0(HttpServletRequest request) {
         String stuNumber = (String) request.getAttribute("stuNumber");
         Map<String,Object> resultMap = new HashMap<>();
         if(!StringUtils.isEmpty(stuNumber)) {
@@ -120,13 +136,23 @@ public class ActiveController {
             if(users != null && users.size()>0) {
                 Integer userId = users.get(0).getId();
                 List<Active> actives = activeService.listByUserId(userId);
-                List<Active> actives0 = new ArrayList<>();
-                List<String> agreeName = new ArrayList<>();
-                List<String> rejectName = new ArrayList<>();
-                List<String> unSee = new ArrayList<>();
+                List<ActiveMsg> activesMsg = new ArrayList<>();
+
+                String result ;
                 for(Active active:actives){
                     if(active.getState() == 0){
+                        List<String> agreeName = new ArrayList<>();
+                        List<String> rejectName = new ArrayList<>();
+                        List<String> unSee = new ArrayList<>();
+
+                        String startTime = active.getStartTime().format( DateTimeFormatter.ofPattern("yyyy-M-d"));
+                        String endTime = active.getEndTime().format( DateTimeFormatter.ofPattern("yyyy-M-d"));
+                        ActiveMsg activeMsg = new ActiveMsg(active.getId()
+                                ,active.getCreateUser(),active.getName(),active.getUnit()
+                                ,startTime,endTime,active.getNum(),active.getPosition()
+                                ,active.getRemarks(),active.getState(),active.getResult());
                         List<Invitation> invitations = invitationService.getByActiveId(active.getId());
+
                         for(Invitation invitation :invitations){
                             int state = invitation.getState();
                             if(state == 0 || state == 1){
@@ -137,7 +163,7 @@ public class ActiveController {
                                 agreeName.add(userService.getById(invitation.getUserId()).getName());
                             }
                         }
-                        String result = "";
+                        result = "";
                         for(String name:agreeName)
                             result += name+" ";
                         result += agreeName.size()+"人已同意\n";
@@ -147,18 +173,15 @@ public class ActiveController {
                         for(String name:rejectName)
                             result += name+" ";
                         result += rejectName.size()+"人已拒绝";
-                        active.setResult(result);
-                        actives0.add(active);
+                        activeMsg.setResult(result);
+                        activesMsg.add(activeMsg);
                     }
                 }
-                resultMap.put("actives0",actives0);
+                resultMap.put("activesMsg",activesMsg);
                 String token = jwtUtill.updateJwt(stuNumber);
                 resultMap.put("token",token);
-                ObjectMapper mapper = new ObjectMapper();
-                String responseJson = mapper.writeValueAsString(resultMap);
-                return new Response().success(responseJson);
+                return new Response().success(resultMap);
             }
-            return new Response(ResponseMsg.NO_TARGET);
         }
         return new Response(ResponseMsg.AUTHENTICATE_FAILED);
     }
@@ -169,30 +192,34 @@ public class ActiveController {
      * @return
      */
     @GetMapping("/getJoinActive")
-    public Response getJoinActive(HttpServletRequest request) throws JsonProcessingException {
+    public Response getJoinActive(HttpServletRequest request) {
         String stuNumber = (String) request.getAttribute("stuNumber");
         Map<String,Object> resultMap = new HashMap<>();
         if(!StringUtils.isEmpty(stuNumber)){
             List<User> users = userService.getByStuNumber(stuNumber);
             if(users != null && users.size()>0) {
-                List<Active> actives = new ArrayList<>();
                 Integer userId = users.get(0).getId();
                 List<Invitation> invitations = invitationService.listByUserId(userId);
+                List<ActiveMsg> activesMsg = new ArrayList<>();
                 for(Invitation invitation:invitations){
                     Active active = activeService.getById(invitation.getActiveId());
+                    String startTime = active.getStartTime().format( DateTimeFormatter.ofPattern("yyyy-M-d"));
+                    String endTime = active.getEndTime().format( DateTimeFormatter.ofPattern("yyyy-M-d"));
+                    ActiveMsg activeMsg = new ActiveMsg(active.getId()
+                            ,active.getCreateUser(),active.getName(),active.getUnit()
+                            ,startTime,endTime,active.getNum(),active.getPosition()
+                            ,active.getRemarks(),active.getState(),active.getResult());
+
                     int state = active.getState();
                     if(state == 1)
-                        active.setResult(invitation.getTime());
-                    actives.add(active);
+                        activeMsg.setResult(invitation.getTime());
+                    activesMsg.add(activeMsg);
                 }
                 String token = jwtUtill.updateJwt(stuNumber);
                 resultMap.put("token",token);
-                resultMap.put("actives",actives);
-                ObjectMapper mapper = new ObjectMapper();
-                String responseJson = mapper.writeValueAsString(resultMap);
-                return new Response().success(responseJson);
+                resultMap.put("activeMsg",activesMsg);
+                return new Response().success(resultMap);
             }
-            return new Response(ResponseMsg.NO_TARGET);
         }
         return new Response(ResponseMsg.AUTHENTICATE_FAILED);
     }

@@ -2,6 +2,7 @@ package com.arrange.controller;
 
 import com.alibaba.druid.util.StringUtils;
 import com.arrange.pojo.po.Active;
+import com.arrange.pojo.po.FreeMsg;
 import com.arrange.pojo.po.Invitation;
 import com.arrange.pojo.po.User;
 import com.arrange.pojo.po.timetable.Curriculum;
@@ -22,10 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 排班的controller
@@ -56,49 +54,61 @@ public class ArrangeController {
         if(!StringUtils.isEmpty(stuNumber)) {
             List<User> users = invitationService.getUsers(activeId);
             Active active = activeService.getById(activeId);
-
             if(users != null && users.size()>0) {
-                Map<Integer,int[][]> frees = new HashMap<>();//记录每个人的空余时间
+                Queue <FreeMsg> frees = new LinkedList<>();//记录每个人的空余时间
+                Map<Integer,int[][]> freesMap = new HashMap<>();
                 for(User user:users){
                     int[][] free = Packaging(user.getTimetable(),active.getStartTime(),active.getEndTime());
                     free = dealFree(free);
-                    frees.put(user.getId(),free);
+                    FreeMsg freeMsg = new FreeMsg(user.getId(),free);
+                    frees.add(freeMsg);
+                    freesMap.put(user.getId(),free);
                 }
                 int days = (int) (active.getEndTime().toEpochDay() - active.getStartTime().toEpochDay())+1;//计算出多少天
                 int num = active.getNum();
                 int[][][] groups = null;
                 if(num > 0){
-                    groups = new int[days][5][num];
-                    while(check(groups)){
-                        Map<Integer,int[][]> unArrange = new HashMap<>();
-                        unArrange.putAll(frees);
+                    groups = new int[days][4][num];
+                    int max = 0;//最多循环5次
+                    Map<Integer,Integer> hasArrange = new HashMap<>();//已经被安排的学生
+                    while(!check(groups)){
+                        hasArrange.clear();
+                        max++;
                         for(int i = 0;i<groups.length;i++){//第几天
                             for(int j = 0;j<groups[i].length;j++){//第几节
-                                int num1 = 0;
-                                for(int k = 0;k<users.size();k++){//第几个人
-                                    int[][] free1 = frees.get(users.get(k).getId());
-                                    if(free1[i][j]==0){
-                                        groups[i][j][num1] = users.get(k).getId();
-                                        unArrange.remove(users.get(k).getId());
-                                        num1++;
+                                for(int n = 0;n<active.getNum();n++){//第几个人
+                                    if(groups[i][j][n] == 0){
+                                        FreeMsg freeMsg1 = null;
+                                        for(FreeMsg freeMsg:frees){
+                                            int id = freeMsg.getId();
+                                            int[][] free1 = freeMsg.getFree();
+                                            if(free1[i][j]==0 && hasArrange.get(id) == null) {//没课
+                                                freeMsg1 = new FreeMsg(id,free1);
+                                            }
+                                        }
+                                        if(freeMsg1 != null){
+                                            groups[i][j][n] = freeMsg1.getId();
+                                            hasArrange.put(freeMsg1.getId(),1);
+                                            frees.remove(freeMsg1);
+                                            frees.add(freeMsg1);
+                                        }
                                     }
-                                    if(num1>=2)
-                                        break;
                                 }
                             }
                         }
+                        if(max > 1)
+                            break;
                     }
                 }else if(num == 0){
-                    groups = new int[days][5][100];
-                    Map<Integer,int[][]> unArrange = new HashMap<>();
-                    unArrange.putAll(frees);
+                    groups = new int[days][4][100];
                     for(int i = 0;i<groups.length;i++){//第几天
                         for(int j = 0;j<groups[i].length;j++){//第几节
-                            for(int k = 0;k<users.size();k++){//第几个人
-                                int[][] free1 = frees.get(users.get(k).getId());
-                                if(free1[i][j]==0){
-                                    groups[i][j][k] = users.get(k).getId();
-                                    unArrange.remove(users.get(k).getId());
+                            int num1 = 0;
+                            for(int k = 0;k<users.size();k++){
+                                int[][] free = freesMap.get(users.get(k).getId());
+                                if(num1<100 && free[i][j] == 0){
+                                    groups[i][j][num1] = users.get(k).getId();
+                                    num1++;
                                 }
                             }
                         }
@@ -108,11 +118,8 @@ public class ArrangeController {
                 String token = jwtUtill.updateJwt(stuNumber);
                 resultMap.put("token",token);
                 resultMap.put("resultList",resultList);
-                ObjectMapper mapper = new ObjectMapper();
-                String responseJson = mapper.writeValueAsString(resultMap);
-                return new Response().success(responseJson);
+                return new Response().success(resultMap);
             }
-            return new Response(ResponseMsg.NO_TARGET);
         }
         return new Response(ResponseMsg.AUTHENTICATE_FAILED);
     }
@@ -123,19 +130,31 @@ public class ArrangeController {
      * @return
      */
     private List<String> dealGroups(int[][][] groups,Active active) throws JsonProcessingException {
+        List<Invitation> invitations = invitationService.getByActiveId(active.getId());
+        for (Invitation invitation:invitations){
+            invitation.setTime("");
+            invitationService.saveOrUpdate(invitation);
+        }
         LocalDate formDay = active.getStartTime();
         List<String> resultList = new ArrayList<>();
         for(int i = 0;i<groups.length;i++) {//第几天
-            for (int j = 0; j < groups[i].length; j++) {//第几节
+            for (int j = 0; j < groups[i].length ; j++) {//第几节
+
                 String time = formDay.plusDays(i).toString();
                 String detailTime = detailTime(j);
-                String result = time+" "+detailTime;
+                time += " "+detailTime;
+                String result = time;
                 for (int k = 0; k < groups[i][j].length; k++) {//第几个人
+
                     User user = userService.getById(groups[i][j][k]);
-                    Invitation invitation = invitationService.getByActiveIdAndUserId(active.getId(),user.getId());
-                    invitation .setTime(result);
-                    String name = user.getName();
-                    result += " "+name;
+                    if(user != null){
+                        Invitation invitation = invitationService.getByActiveIdAndUserId(active.getId(),user.getId());
+                        String re = invitation.getTime();
+                        invitation.setTime(re+time+"\n");
+                        invitationService.saveOrUpdate(invitation);
+                        String name = user.getName();
+                        result += " "+name;
+                    }
                 }
                 resultList.add(result);
             }
@@ -155,11 +174,10 @@ public class ArrangeController {
      */
     private String detailTime(int j) {
         switch (j){
-            case 0: return "8:00-9:40";
+            case 0: return "08:00-09:40";
             case 1: return "10:00-11:40";
             case 2: return "14:10-15:50";
             case 3: return "16:00-17:40";
-            case 4: return "18:40-21:05";
         }
         return "";
     }
@@ -174,16 +192,15 @@ public class ArrangeController {
         for(int i = 0;i<free.length;i++){
             if(free[i].length < 11)
                 return null;
-            if(free[i][0] == 1 || free[i][1] == 1)
+            if(free[i][0] >= 1 || free[i][1] >= 1)
                 newFree[i][0] = 1;
-            if(free[i][2] == 1 || free[i][3] == 1)
+            if(free[i][2] >= 1 || free[i][3] >= 1)
                 newFree[i][1] = 1;
-            if(free[i][4] == 1 || free[i][5] == 1)
+            if(free[i][4] >= 1 || free[i][5] >= 1)
                 newFree[i][2] = 1;
-            if(free[i][6] == 1 || free[i][7] == 1)
+            if(free[i][6] >= 1 || free[i][7] >= 1)
                 newFree[i][3] = 1;
-            if(free[i][8] == 1 || free[i][9] == 1||free[i][10] == 1||free[i][11] == 1)
-                newFree[i][4] = 1;
+            newFree[i][4] = 1;//将晚上全部设为有课，不进行排班
         }
         return newFree;
     }
@@ -192,18 +209,16 @@ public class ArrangeController {
      * @param json
      * @return
      */
-    private int[][] Packaging(String json,LocalDate formDay,LocalDate toDay) throws JsonProcessingException {
-
+    private int[][] Packaging(String json,LocalDate startTime,LocalDate endTime) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         Curriculums curriculums = objectMapper.readValue(json, Curriculums.class);
         FirstDay firstDay = firstDayService.getById(firstDayService.count());
-        LocalDate firstWeek = LocalDate.of(LocalDate.now().getYear(),firstDay.getMonth(),firstDay.getDay());
-
-        int days = (int) (formDay.toEpochDay() - toDay.toEpochDay())+1;//计算出多少天
+        LocalDate firstWeek = LocalDate.of(firstDay.getYear(),firstDay.getMonth(),firstDay.getDay());
+        int days = (int) (endTime.toEpochDay() - startTime.toEpochDay())+1;//计算出多少天
         int[][] free = new int[days][12];
-        LocalDate now = formDay;
+        LocalDate now = LocalDate.parse(startTime.toString());
         int i = 0;
-        while(!now.isAfter(toDay)){
+        while(!now.isAfter(endTime)){
             if(! now.isBefore(firstWeek)){
                 Long week = 1+(now.toEpochDay()-firstWeek.toEpochDay())/7;//第几周
                 Integer dayOfWeek = now.getDayOfWeek().getValue();//星期几
@@ -215,12 +230,12 @@ public class ArrangeController {
                         int fromSection = curriculum.getFrom_section();
                         int toSection = curriculum.getTo_section();
                         for(int j=fromSection;j<=toSection;j++)
-                            free[i][j-1]--;
+                            free[i][j-1]++;//有课就大于0
                     }
                 }
             }
             i++;
-            now.plusDays(1);
+            now = now.plusDays(1);
         }
         return free;
     }

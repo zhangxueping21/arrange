@@ -9,15 +9,12 @@ import com.arrange.service.UnitService;
 import com.arrange.service.UserService;
 import com.arrange.utils.JwtUtill;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,27 +32,50 @@ public class UnitController {
     @Autowired
     private JwtUtill jwtUtill;
     @GetMapping("/getUnit")
-    public Response getUnit(HttpServletRequest request) throws JsonProcessingException {
+    public Response getUnit(HttpServletRequest request)  {
         String stuNumber = (String) request.getAttribute("stuNumber");
         Map<String,Object> resultMap = new HashMap<>();
         if(!StringUtils.isEmpty(stuNumber)) {
             List<User> users = userService.getByStuNumber(stuNumber);
             String unit = users.get(0).getUnit();
-            char[] units = unit.toCharArray();
-            List<Unit> unitList = new ArrayList<>();
+            String[] units = unit.split(" ");
+            Map<Integer,String> unitMap = new HashMap<>();
             for(int i = 0;i<units.length;i++){
-                int id = units[i]-'0';
+                int id = Integer.parseInt(units[i]);
                 Unit aUnit = unitService.getById(id);
-                unitList.add(aUnit);
+                if(aUnit != null)
+                    unitMap.put(id,aUnit.getUnitName());
             }
             String token = jwtUtill.updateJwt(stuNumber);
-            resultMap.put("units",unitList);
+            resultMap.put("units",unitMap);
             resultMap.put("token",token);
-            ObjectMapper mapper = new ObjectMapper();
-            String responseJson = mapper.writeValueAsString(resultMap);
-            return new Response().success(responseJson);
+            return new Response().success(resultMap);
         }
-        return new Response(ResponseMsg.NO_TARGET);
+        return new Response(ResponseMsg.AUTHENTICATE_FAILED);
+    }
+
+    /**
+     * 获取全部单位
+     * @param request
+     * @return
+     * @throws JsonProcessingException
+     */
+    @GetMapping("/getAllUnits")
+    public Response getAllUnit(HttpServletRequest request)  {
+        String stuNumber = (String) request.getAttribute("stuNumber");
+        Map<String,Object> resultMap = new HashMap<>();
+        if(!StringUtils.isEmpty(stuNumber)) {
+            List<Unit> units = unitService.list();
+            Map<Integer,String> unitMap = new HashMap<>();
+            for(Unit unit:units){
+                unitMap.put(unit.getId(),unit.getUnitName());
+            }
+            String token = jwtUtill.updateJwt(stuNumber);
+            resultMap.put("units",unitMap);
+            resultMap.put("token",token);
+            return new Response().success(resultMap);
+        }
+        return new Response(ResponseMsg.AUTHENTICATE_FAILED);
     }
     @PutMapping("/setUnit")
     public Response setUnit(HttpServletRequest request,String unit){
@@ -69,7 +89,6 @@ public class UnitController {
                 String token = jwtUtill.updateJwt(stuNumber);
                 return new Response().success(token);
             }
-            return new Response(ResponseMsg.NO_TARGET);
         }
         return new Response(ResponseMsg.AUTHENTICATE_FAILED);
     }
@@ -80,14 +99,13 @@ public class UnitController {
             List<User> users = userService.getByStuNumber(stuNumber);
             if(users != null && users.size()>0){
                 User user = users.get(0);
-                user.setUnit(user.getUnit()+unit);
+                unit = user.getUnit()+" "+unit;
+                user.setUnit(unit);
                 userService.saveOrUpdate(user);
                 String token = jwtUtill.updateJwt(stuNumber);
                 return new Response().success(token);
             }
-            return new Response(ResponseMsg.NO_TARGET);
         }
         return new Response(ResponseMsg.AUTHENTICATE_FAILED);
     }
-
 }

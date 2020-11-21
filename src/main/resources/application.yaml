@@ -76,7 +76,7 @@ server:
 # jwt的私钥和失效时间1h
 jwtutill:
   key: bitwechat
-  ttl: 3600000
+  ttl: 36000000000000
 
 passwordutil:
   encryptablesalt: SGxw#hkYlfc$#p^PZ*v$u26s

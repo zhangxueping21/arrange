@@ -49,6 +49,7 @@ public class JwtUtill {
         //返回token
         return jwtBuilder.compact();
     }
+
     public String updateJwt(String stuNumber){
         //设置失效时间，未使用，待确认
         long now = System.currentTimeMillis();//当前时间戳

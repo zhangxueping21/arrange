@@ -14,7 +14,7 @@ public class Unit {
     /**主键*/
     private Integer id;
     /**单位名称*/
-    private String unitTime;
+    private String unitName;
     /**创建时间*/
     private LocalDateTime createTime;
     /**更新时间*/

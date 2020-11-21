@@ -3,14 +3,13 @@ package com.arrange.controller;
 import com.alibaba.druid.util.StringUtils;
 import com.arrange.pojo.po.LoginUser;
 import com.arrange.pojo.po.User;
+import com.arrange.pojo.po.UserMsg;
 import com.arrange.pojo.vo.Response;
 import com.arrange.pojo.vo.ResponseMsg;
 import com.arrange.service.UserService;
 import com.arrange.utils.HttpUtil;
 import com.arrange.utils.JwtUtill;
 import com.arrange.utils.TimetableUtil;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -42,33 +41,33 @@ public class UserController {
     @PostMapping("/login")
     public Response login(LoginUser loginUser) throws IOException {
         Map<String,String> map = TimetableUtil.dataProcessing(HttpUtil.crawl(loginUser,timetablePage));
-        String timetableJson = map.get("curriculumsJson");
-        String username = map.get("username");
-        Map<String,String> resultMap = new HashMap<>();
-        if(!StringUtils.isEmpty(timetableJson)) {
-            List<User> users = userService.getByStuNumber(loginUser.getStuNumber());
-            int id = 0;
-            User user;
-            String unit = "";
-            resultMap.put("firstLogin","true");
-            if(users != null && users.size()>0){
-                id = users.get(0).getId();
-                unit = users.get(0).getUnit();
-                resultMap.put("firstLogin","false");
+        if(map != null){
+            String timetableJson = map.get("curriculumsJson");
+            String username = map.get("username");
+            Map<String,String> resultMap = new HashMap<>();
+            if(!StringUtils.isEmpty(timetableJson)) {
+                List<User> users = userService.getByStuNumber(loginUser.getStuNumber());
+                int id = 0;
+                User user;
+                String unit = "";
+                resultMap.put("firstLogin","true");
+                if(users != null && users.size()>0){
+                    id = users.get(0).getId();
+                    unit = users.get(0).getUnit();
+                    resultMap.put("firstLogin","false");
+                }
+                user = new User(id,username,loginUser.getStuNumber(),unit,timetableJson, LocalDateTime.now(),LocalDateTime.now());
+                userService.saveOrUpdate(user);
+                String token = jwtUtill.createJwt(loginUser.getStuNumber());
+                resultMap.put("token",token);
+                return new Response().success(resultMap);
             }
-            user = new User(id,username,loginUser.getStuNumber(),unit,timetableJson, LocalDateTime.now(),LocalDateTime.now());
-            userService.saveOrUpdate(user);
-            String token = jwtUtill.createJwt(loginUser.getStuNumber());
-            resultMap.put("token",token);
-            ObjectMapper mapper = new ObjectMapper();
-            String responseJson = mapper.writeValueAsString(resultMap);
-            return new Response().success(responseJson);
         }
         return new Response(ResponseMsg.PASSWORD_WRONG);
     }
 
     @GetMapping("/getUserMsg")
-    public Response getUserMsg(HttpServletRequest request) throws JsonProcessingException {
+    public Response getUserMsg(HttpServletRequest request) {
         String stuNumber = (String) request.getAttribute("stuNumber");
         if(!StringUtils.isEmpty(stuNumber)){
             List<User> users = userService.getByStuNumber(stuNumber);
@@ -76,13 +75,11 @@ public class UserController {
                 User user = users.get(0);
                 String token = jwtUtill.updateJwt(stuNumber);
                 Map<String,Object> resultMap = new HashMap<>();
-                resultMap.put("user",user);
+                UserMsg userMsg = new UserMsg(user.getId(),user.getName(),user.getStuNumber(),user.getUnit());
+                resultMap.put("userMsg",userMsg);
                 resultMap.put("token",token);
-                ObjectMapper mapper = new ObjectMapper();
-                String responseJson = mapper.writeValueAsString(resultMap);
-                return new Response().success(responseJson);
+                return new Response().success(resultMap);
             }
-            return new Response(ResponseMsg.NO_TARGET);
         }
         return new Response(ResponseMsg.AUTHENTICATE_FAILED);
     }
