@@ -29,14 +29,19 @@ public class JwtInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         try {
+            if("OPTIONS".equals(request.getMethod())){
+                log.info(request.getMethod());
+                return true;
+            }
+
+
             String url = request.getRequestURL().toString();
-            //防止其他域名调用接口
-            if(! (url.startsWith("https://arrange.bitworkshop.cn") ||url.startsWith("http://localhost/")))
-                return false;
+            log.info(url);
             Claims claims = jwtUtill.getClaims(request);
             request.setAttribute("stuNumber",claims.get("jti"));
             return true;
         }catch (Exception e){
+            e.printStackTrace();
             log.info("未携带token或token过期,被拦截");
             return false;
         }

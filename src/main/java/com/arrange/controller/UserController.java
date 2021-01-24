@@ -10,6 +10,7 @@ import com.arrange.service.UserService;
 import com.arrange.utils.HttpUtil;
 import com.arrange.utils.JwtUtill;
 import com.arrange.utils.TimetableUtil;
+import org.apache.hc.core5.http.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,7 +40,15 @@ public class UserController {
      * @return 返回响应结果
      */
     @PostMapping("/login")
-    public Response login(LoginUser loginUser) throws IOException {
+    public Response login(LoginUser loginUser) throws IOException, ParseException {
+        if(loginUser.getStuNumber().length() == 5){
+            String token = jwtUtill.createJwt(loginUser.getStuNumber());
+            Map<String,String> resultMap = new HashMap<>();
+            resultMap.put("token",token);
+            resultMap.put("firstLogin","true");
+            return new Response().success(resultMap);
+        }
+
         Map<String,String> map = TimetableUtil.dataProcessing(HttpUtil.crawl(loginUser,timetablePage));
         if(map != null){
             String timetableJson = map.get("curriculumsJson");

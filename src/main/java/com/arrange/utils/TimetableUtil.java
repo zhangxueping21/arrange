@@ -2,8 +2,18 @@ package com.arrange.utils;
 
 import com.arrange.pojo.po.timetable.Curriculum;
 import com.arrange.pojo.po.timetable.Curriculums;
+import com.arrange.pojo.vo.ThreadLocalClient;
+import com.arrange.pojo.vo.ThreadLocalContext;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.ParseException;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -11,7 +21,15 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Component
 public class TimetableUtil {
@@ -31,8 +49,8 @@ public class TimetableUtil {
      * @param page
      * @return
      */
-    public static Map<String,String> dataProcessing (String page) throws JsonProcessingException {
-        String username = "";
+    public static Map<String,String> dataProcessing (String page) throws IOException, ParseException {
+        String username = getName();
         Curriculums curriculums = new Curriculums();
         List<List<Curriculum>> curriculumWeek = new ArrayList<>(7);//每个周的课，一周有7天
         for(int i = 0;i<7;i++)
@@ -42,7 +60,6 @@ public class TimetableUtil {
             Document document = Jsoup.parse(page);
             Elements inputArray = document.getElementsByTag("tr");//对应的元素数组
             String[] str = document.getElementsByTag("strong").text().split("【");
-            username = str[0];
             String endString = "课程类别";
             try{
                 for (int i=1;! inputArray.get(i).text().contains(endString);i++){
@@ -66,6 +83,40 @@ public class TimetableUtil {
         map.put("curriculumsJson",curriculumsJson);
         map.put("username",username);
         return map;
+    }
+
+    private static String getName() throws IOException, ParseException {
+
+        CookieManager cookieManager = new CookieManager();
+        cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
+        RequestConfig config = RequestConfig.custom().setRedirectsEnabled(true).build();//不允许重定向
+
+        HttpGet httpGet = new HttpGet("http://eol.scuec.edu.cn/meol/homepage/common/sso_login.jsp");
+        httpGet.setConfig(config);
+        httpGet.addHeader("User-Agent", UA);
+        httpGet.addHeader("Referer", REFERER);
+
+        CloseableHttpClient client = ThreadLocalClient.get();
+        HttpClientContext context = ThreadLocalContext.get();
+//            client.execute(httpGet,context);
+//
+//            httpGet.setPath("http://eol.scuec.edu.cn/meol/personal.do?menuId=0");
+        CloseableHttpResponse inputStream = client.execute(httpGet,context);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream.getEntity().getContent()));
+        HttpEntity entity = inputStream.getEntity();
+        String page = EntityUtils.toString(entity, "utf-8");
+        String pattern = "(?<=&from=welcomepage\" class=\"info chgright\" target=\"main\">).*?(?=</a></div>)";
+
+        // 创建 Pattern 对象
+        Pattern r = Pattern.compile(pattern);
+
+        // 现在创建 matcher 对象
+        Matcher m = r.matcher(page);
+        if (m.find( )) {
+            return m.group(0);
+        } else {
+            return "";
+        }
     }
 
     private static void setCurriculum(Elements elementTds,List<List<Curriculum>> curriculumWeek ){

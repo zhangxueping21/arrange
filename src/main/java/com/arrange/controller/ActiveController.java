@@ -205,13 +205,14 @@ public class ActiveController {
                     Active active = activeService.getById(invitation.getActiveId());
                     String startTime = active.getStartTime().format( DateTimeFormatter.ofPattern("yyyy-M-d"));
                     String endTime = active.getEndTime().format( DateTimeFormatter.ofPattern("yyyy-M-d"));
+                    int state = invitation.getState();
                     ActiveMsg activeMsg = new ActiveMsg(active.getId()
                             ,active.getCreateUser(),active.getName(),active.getUnit()
                             ,startTime,endTime,active.getNum(),active.getPosition()
-                            ,active.getRemarks(),active.getState(),active.getResult());
+                            ,active.getRemarks(),state,active.getResult());
 
-                    int state = active.getState();
-                    if(state == 1)
+                    int activeState = active.getState();
+                    if(activeState == 1)
                         activeMsg.setResult(invitation.getTime());
                     activesMsg.add(activeMsg);
                 }

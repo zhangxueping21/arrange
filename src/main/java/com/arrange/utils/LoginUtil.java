@@ -76,7 +76,6 @@ public class LoginUtil {
         ThreadLocalClient.set(client);
         ThreadLocalContext.set(context);
         if(response2 != null && response2.getCode() == 302 ){
-            // context.getCookieStore().getCookies().forEach(System.out::println);
             log.info("登录成功");
             return true;
         }

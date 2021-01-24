@@ -41,12 +41,4 @@ public class MvcConfig implements WebMvcConfigurer {
         registry.addViewController("/toBit1").setViewName("toBit1");
     }
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins("*")
-                .allowedMethods("*")
-                .allowedHeaders("*");
-    }
-
 }

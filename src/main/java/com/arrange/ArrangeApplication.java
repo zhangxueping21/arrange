@@ -7,6 +7,7 @@ import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import javax.annotation.PostConstruct;
 import java.util.TimeZone;
