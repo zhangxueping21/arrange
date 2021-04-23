@@ -38,14 +38,18 @@ public class UnitController {
         if(!StringUtils.isEmpty(stuNumber)) {
             List<User> users = userService.getByStuNumber(stuNumber);
             String unit = users.get(0).getUnit();
-            String[] units = unit.split(" ");
             Map<Integer,String> unitMap = new HashMap<>();
-            for(int i = 0;i<units.length;i++){
-                int id = Integer.parseInt(units[i]);
-                Unit aUnit = unitService.getById(id);
-                if(aUnit != null)
-                    unitMap.put(id,aUnit.getUnitName());
+            if(!"".equals(unit)){
+                String[] units = unit.split(" ");
+
+                for(int i = 0;i<units.length;i++){
+                    int id = Integer.parseInt(units[i]);
+                    Unit aUnit = unitService.getById(id);
+                    if(aUnit != null)
+                        unitMap.put(id,aUnit.getUnitName());
+                }
             }
+
             String token = jwtUtill.updateJwt(stuNumber);
             resultMap.put("units",unitMap);
             resultMap.put("token",token);

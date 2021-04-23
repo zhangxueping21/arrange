@@ -8,10 +8,10 @@ spring:
     cache: false
   datasource:
     username: root
-    password: 213926
-#    password: SZZpTH(dcD*zzi]bkVqtqdi2
-    url: jdbc:mysql://localhost:3306/arrange?allowPublicKeyRetrieval=true&useSSL=false&useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
-#    url: jdbc:mysql://mysql:3306/arrange?allowPublicKeyRetrieval=true&useSSL=false&useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
+#    password: 213926
+    password: SZZpTH(dcD*zzi]bkVqtqdi2
+#    url: jdbc:mysql://localhost:3306/arrange?allowPublicKeyRetrieval=true&useSSL=false&useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
+    url: jdbc:mysql://mysql:3306/arrange?allowPublicKeyRetrieval=true&useSSL=false&useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
     #Spring Boot 默认是不注入这些属性值的，需要自己绑定
@@ -88,3 +88,10 @@ interceptorconfig:
     - /login
     - /
     - /csrf
+    - /umi.css
+    - /umi.js
+    - /favicon.ico
+    - /index
+    - /error
+    - /static/**
+    - /my

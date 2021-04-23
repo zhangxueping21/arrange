@@ -38,7 +38,8 @@ public class MvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addViewController("/toBit1").setViewName("toBit1");
+        registry.addViewController("/").setViewName("index");
+        registry.addViewController("/index").setViewName("index");
     }
 
 }

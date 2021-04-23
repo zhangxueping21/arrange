@@ -23,7 +23,7 @@ public class JwtInterceptor implements HandlerInterceptor {
      * @param request
      * @param response
      * @param handler
-     * @return 如果返回false则被拦截，反正放行
+     * @return 如果返回false则被拦截，反之放行
      * @throws Exception
      */
     @Override
@@ -33,8 +33,6 @@ public class JwtInterceptor implements HandlerInterceptor {
                 log.info(request.getMethod());
                 return true;
             }
-
-
             String url = request.getRequestURL().toString();
             log.info(url);
             Claims claims = jwtUtill.getClaims(request);
